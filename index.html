@@ -1,0 +1,896 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forest Coffee — Earthquake Relief for Colombian Coffee Families</title>
+<meta name="description" content="Forest Coffee matches every dollar 1:1 for families hit by the August 10, 2026 earthquake in Chocó and the Eje Cafetero. Five amounts, split 50/50 between direct family support and home reconstruction.">
+<meta name="theme-color" content="#1B203D">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Forest Coffee — Earthquake Relief">
+<meta property="og:description" content="You give a dollar. Forest adds a dollar. For the coffee-growing families inside the affected area.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   Forest Coffee — earthquake relief landing page
+   Single file, no build step. Design system: a construction drawing on dark
+   paper. Colour grammar is load-bearing: YELLOW MEANS FOREST PUT IT THERE.
+   Nothing else may be yellow.
+   ========================================================================== */
+
+:root {
+  --navy:   #1B203D;
+  --yellow: #E7E244;
+  --sky:    #95B5CE;
+  --off:    #F7F6F0;
+
+  /* Role tokens. Re-declared inside .invert so components stay context-free. */
+  --ground: var(--navy);
+  --fg:     var(--off);
+  --muted:  var(--sky);
+  --line:   rgba(149, 181, 206, 0.38);
+  --focus:  var(--yellow);
+
+  --display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Fluid type scale, ratio ~1.3, base 17px. */
+  --t-xl:    clamp(2.55rem, 1.30rem + 5.4vw, 3.90rem);
+  --t-l:     clamp(1.95rem, 1.15rem + 3.3vw, 2.90rem);
+  --t-m:     clamp(1.60rem, 1.15rem + 1.9vw, 2.15rem);
+  --t-lead:  clamp(1.10rem, 1.00rem + 0.5vw, 1.25rem);
+  --t-body:  1.0625rem;
+  --t-label: 0.8125rem;
+  --t-micro: 0.75rem;
+
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --max:    76rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--fg);
+  font-family: var(--display);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  font-weight: 400;
+  overflow-x: hidden;
+  /* Column ticks: the page grid, drawn faintly, always present. */
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(149, 181, 206, 0.10) 0 1px,
+    transparent 1px calc(100% / 12)
+  );
+  background-size: min(var(--max), 100vw - 2 * var(--gutter)) 100%;
+  background-position: center top;
+  background-repeat: repeat-y;
+}
+
+h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h1 { font-size: var(--t-xl);  line-height: 0.96; }
+h2 { font-size: var(--t-l);   line-height: 1.02; }
+h3 { font-size: var(--t-m);   line-height: 1.08; letter-spacing: -0.015em; }
+p  { margin: 0; max-width: 62ch; }
+a  { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 10;
+  background: var(--yellow); color: var(--navy);
+  font-family: var(--mono); font-size: var(--t-label);
+  padding: 0.75rem 1rem; text-decoration: none;
+}
+.skip:focus { left: 0; }
+
+/* Available to screen readers, absent from the drawing. The dimension figures
+   are aria-hidden because read aloud they are noise; these sentences carry the
+   same information in prose. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Layout primitives -------------------------------------------------- */
+
+.wrap {
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.band { padding-block: clamp(2.75rem, 6vw, 4.5rem); }
+
+.invert {
+  --ground: var(--off);
+  --fg:     var(--navy);
+  --muted:  #4A5570;              /* sky blue fails AA on off-white; this passes */
+  --line:   rgba(27, 32, 61, 0.28);
+  --focus:  var(--navy);
+  background: var(--ground);
+  color: var(--fg);
+}
+
+/* --- Drawing-sheet section header --------------------------------------- */
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rule-line { flex: 1 1 auto; height: 1px; background: var(--line); }
+.rule-note { flex: 0 0 auto; text-align: right; }
+
+.meta {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --- Header ------------------------------------------------------------- */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.lang { display: flex; gap: 1px; align-items: stretch; }
+.lang-btn {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  padding: 0.45rem 0.8rem;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.lang-btn[aria-pressed="true"] {
+  background: var(--fg);
+  color: var(--ground);
+  border-color: var(--fg);
+}
+
+/* --- Hero --------------------------------------------------------------- */
+
+.hero { padding-block: clamp(2.75rem, 7vw, 5rem) clamp(3rem, 7vw, 5rem); }
+.hero-head { display: grid; gap: clamp(1.25rem, 3vw, 1.75rem); max-width: 58rem; }
+.hero-lead { font-size: var(--t-lead); line-height: 1.5; }
+.hero-claim {
+  font-size: var(--t-lead);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--yellow);
+  max-width: 34ch;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1px;
+  margin-top: clamp(2.5rem, 6vw, 3.5rem);
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.figure { background: var(--ground); padding: 1.15rem 1.15rem 1.25rem; }
+.figure-n {
+  font-family: var(--mono);
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  display: block;
+}
+.figure-t {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  display: block;
+}
+.source { margin-top: 1rem; }
+
+/* --- The signature element: a dimension line with two spans -------------- */
+
+.dim { margin-block: clamp(2rem, 5vw, 3rem); max-width: 46rem; }
+
+.dim-keys {
+  display: flex;
+  gap: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dim-key {
+  flex: 1 1 0;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+/* Witness ticks at each end of the bracket — drafting notation, not decor. */
+.dim-key::before,
+.dim-key::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 7px;
+  background: var(--line);
+}
+.dim-key::before { left: 0; }
+.dim-key::after  { right: 0; }
+
+.dim-track { display: flex; gap: 0; }
+.dim-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: clamp(0.9rem, 2.5vw, 1.4rem) 0.5rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: clamp(0.95rem, 0.7rem + 1vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.seg-you    { border: 1px solid var(--fg);     color: var(--fg);   background: transparent; }
+.seg-forest { border: 1px solid var(--yellow); color: var(--navy); background: var(--yellow); border-left-width: 0; }
+
+.dim-total {
+  margin-top: 0.9rem;
+  font-family: var(--mono);
+  font-size: var(--t-m);
+  font-weight: 500;
+  color: var(--yellow);
+  letter-spacing: -0.02em;
+}
+
+/* --- Spec table (cap + closing date) ------------------------------------ */
+
+.spec {
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  margin-block: clamp(1.75rem, 4vw, 2.5rem);
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--line);
+  max-width: 46rem;
+}
+.spec dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.spec dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.pending { color: var(--muted); border-bottom: 1px dashed currentColor; }
+
+/* --- Amount cards ------------------------------------------------------- */
+
+.amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.card {
+  background: var(--ground);
+  padding: 1.25rem 1.15rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.card .dim { margin: 0; }
+.card .dim-total { font-size: 1.5rem; margin-top: 0.7rem; }
+
+.give {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.9rem 0.75rem;
+  background: var(--yellow);
+  color: var(--navy);
+  border: 1px solid var(--yellow);
+  margin-top: auto;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+.give:hover { background: var(--off); border-color: var(--off); transform: translateY(-2px); }
+.give:active { transform: translateY(0); }
+
+.give.is-disabled {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  cursor: not-allowed;
+  transform: none;
+}
+.give-note { font-family: var(--mono); font-size: var(--t-micro); color: var(--muted); }
+
+.cta {
+  display: inline-block;
+  justify-self: start;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1rem 1.6rem;
+  background: var(--yellow);
+  color: var(--navy);
+  border: 1px solid var(--yellow);
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+.cta:hover { background: var(--off); border-color: var(--off); transform: translateY(-2px); }
+
+noscript .note { display: block; margin-top: 1.25rem; }
+
+/* --- 50/50 split: a plan divided by a party wall ------------------------ */
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--line);
+  margin-block: clamp(1.75rem, 4vw, 2.5rem);
+}
+.half {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+.half + .half { border-left: 3px solid var(--yellow); }   /* the party wall */
+.half-pct {
+  font-family: var(--mono);
+  font-size: var(--t-m);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.half h3 { font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem); }
+
+/* --- Transparency ------------------------------------------------------- */
+
+.notes {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+}
+.note {
+  background: var(--ground);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  display: grid;
+  gap: 0.65rem;
+}
+.note-k {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.note a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+/* --- Footer ------------------------------------------------------------- */
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding-block: 2rem 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --- Responsive --------------------------------------------------------- */
+
+@media (max-width: 40rem) {
+  .split { grid-template-columns: 1fr; }
+  .half + .half { border-left: 0; border-top: 3px solid var(--yellow); }
+  .rule { flex-wrap: wrap; }
+  .rule-note { width: 100%; text-align: left; }
+  .rule-line { min-width: 2rem; }
+}
+
+@media (max-width: 23.5rem) {
+  .dim-seg { font-size: 0.85rem; padding-inline: 0.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .give:hover, .cta:hover { transform: none; }
+}
+
+@media print {
+  body { background: #fff; color: #000; background-image: none; }
+}
+</style>
+
+<a class="skip" href="#amounts" data-es="Ir a los montos">Skip to the amounts</a>
+
+<header class="wrap">
+  <div class="masthead">
+    <span class="brand">Forest Coffee</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
+    </div>
+  </div>
+</header>
+
+<!-- 1. HERO ============================================================== -->
+<main>
+<section class="wrap hero">
+  <div class="hero-head">
+    <p class="eyebrow" data-es="Chocó · Eje Cafetero · Valle del Cauca">Chocó · Eje Cafetero · Valle del Cauca</p>
+
+    <h1 data-es="El terremoto golpeó las fincas que nos venden café.">The earthquake hit the farms we buy from.</h1>
+
+    <p class="hero-lead" data-es="El 10 de agosto de 2026, un terremoto de magnitud 7.4 con epicentro en San José del Palmar, Chocó, golpeó el occidente y el centro de Colombia. El Eje Cafetero está dentro del área afectada. Las familias productoras con las que trabaja Forest, también.">On August 10, 2026, a magnitude 7.4 earthquake with its epicenter in San José del Palmar, Chocó, struck western and central Colombia. The Eje Cafetero is inside the affected area. So are the producing families Forest works with.</p>
+
+    <p class="hero-claim" data-es="Forest Coffee iguala cada dólar que dones, uno a uno.">Forest Coffee matches every dollar you give, one to one.</p>
+
+    <a class="cta" href="#amounts" data-es="Elige un monto">Choose an amount</a>
+  </div>
+
+  <div class="figures">
+    <div class="figure">
+      <span class="figure-n">24,000+</span>
+      <span class="figure-t" data-es="Familias afectadas">Families affected</span>
+    </div>
+    <div class="figure">
+      <span class="figure-n">9,200</span>
+      <span class="figure-t" data-es="Viviendas destruidas">Homes destroyed</span>
+    </div>
+    <div class="figure">
+      <span class="figure-n">45,000+</span>
+      <span class="figure-t" data-es="Viviendas averiadas">Homes damaged</span>
+    </div>
+    <div class="figure">
+      <span class="figure-n">14 / 403</span>
+      <span class="figure-t" data-es="Departamentos / municipios">Departments / municipalities</span>
+    </div>
+  </div>
+  <p class="meta source" data-es="Fuente: UNGRD, balance con corte al 12 de agosto de 2026. Cifras de infraestructura y familias afectadas únicamente.">Source: UNGRD, as of August 12, 2026. Infrastructure and affected-family figures only.</p>
+</section>
+
+<!-- 2. MECHANIC ========================================================== -->
+<section class="wrap band" aria-labelledby="mechanic-h">
+  <div class="rule">
+    <span data-es="Mecánica">Mechanic</span>
+    <span class="rule-line"></span>
+    <span class="rule-note">Scale 1:1</span>
+  </div>
+
+  <h2 id="mechanic-h" data-es="Tú das un dólar. Forest pone otro.">You give a dollar. Forest adds a dollar.</h2>
+
+  <div class="dim">
+    <div class="dim-keys" aria-hidden="true">
+      <span class="dim-key" data-es="Tú">You</span>
+      <span class="dim-key">Forest</span>
+    </div>
+    <div class="dim-track" aria-hidden="true">
+      <span class="dim-seg seg-you">USD 100</span>
+      <span class="dim-seg seg-forest">+ USD 100</span>
+    </div>
+    <p class="dim-total" aria-hidden="true">= USD 200</p>
+    <p class="sr-only" data-es="Ejemplo: donas 100 dólares, Forest agrega 100 dólares, y llegan 200 dólares.">Example: you give USD 100, Forest adds USD 100, and USD 200 arrives.</p>
+  </div>
+
+  <dl class="spec">
+    <dt data-es="Tope del matching">Match cap</dt>
+    <dd><span id="cap-value" class="pending" data-es="Por anunciar">To be announced</span></dd>
+    <dt data-es="El matching cierra">Matching closes</dt>
+    <dd><span id="ends-value" class="pending" data-es="Por anunciar">To be announced</span></dd>
+  </dl>
+
+  <p data-es="El tope es el techo del aporte propio de Forest, no el techo de la campaña. Las donaciones que lleguen después de alcanzarlo se destinan íntegras a las familias; simplemente dejan de duplicarse. Declaramos el tope porque un matching sin límite anunciado es una obligación abierta, y una obligación abierta no es una promesa seria.">The cap is the ceiling on Forest's own contribution, not on the campaign. Donations that arrive after it is reached still go to the families in full — they just stop being doubled. We state the cap because a match with no declared limit is an open-ended obligation, and an open-ended obligation is not a serious promise.</p>
+</section>
+
+<!-- 3. AMOUNTS =========================================================== -->
+<section class="wrap band" id="amounts" aria-labelledby="amounts-h">
+  <div class="rule">
+    <span data-es="Montos">Amounts</span>
+    <span class="rule-line"></span>
+    <span class="rule-note" data-es="Sin límite por donante">No limit per donor</span>
+  </div>
+
+  <h2 id="amounts-h" data-es="Cinco montos. Dona las veces que quieras.">Five amounts. Give as many times as you like.</h2>
+
+  <div class="amounts">
+    <div class="card">
+      <div class="dim">
+        <div class="dim-keys" aria-hidden="true">
+          <span class="dim-key" data-es="Tú">You</span>
+          <span class="dim-key">Forest</span>
+        </div>
+        <div class="dim-track" aria-hidden="true">
+          <span class="dim-seg seg-you">20</span>
+          <span class="dim-seg seg-forest">+20</span>
+        </div>
+        <p class="dim-total" aria-hidden="true">= USD 40</p>
+      </div>
+      <a class="give" data-amount="20" target="_blank" rel="noopener">
+        <span data-es="Dona USD 20">Give USD 20</span>
+        <span class="sr-only" data-es=" — Forest agrega USD 20, total USD 40"> — Forest adds USD 20, USD 40 total</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="dim">
+        <div class="dim-keys" aria-hidden="true">
+          <span class="dim-key" data-es="Tú">You</span>
+          <span class="dim-key">Forest</span>
+        </div>
+        <div class="dim-track" aria-hidden="true">
+          <span class="dim-seg seg-you">40</span>
+          <span class="dim-seg seg-forest">+40</span>
+        </div>
+        <p class="dim-total" aria-hidden="true">= USD 80</p>
+      </div>
+      <a class="give" data-amount="40" target="_blank" rel="noopener">
+        <span data-es="Dona USD 40">Give USD 40</span>
+        <span class="sr-only" data-es=" — Forest agrega USD 40, total USD 80"> — Forest adds USD 40, USD 80 total</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="dim">
+        <div class="dim-keys" aria-hidden="true">
+          <span class="dim-key" data-es="Tú">You</span>
+          <span class="dim-key">Forest</span>
+        </div>
+        <div class="dim-track" aria-hidden="true">
+          <span class="dim-seg seg-you">60</span>
+          <span class="dim-seg seg-forest">+60</span>
+        </div>
+        <p class="dim-total" aria-hidden="true">= USD 120</p>
+      </div>
+      <a class="give" data-amount="60" target="_blank" rel="noopener">
+        <span data-es="Dona USD 60">Give USD 60</span>
+        <span class="sr-only" data-es=" — Forest agrega USD 60, total USD 120"> — Forest adds USD 60, USD 120 total</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="dim">
+        <div class="dim-keys" aria-hidden="true">
+          <span class="dim-key" data-es="Tú">You</span>
+          <span class="dim-key">Forest</span>
+        </div>
+        <div class="dim-track" aria-hidden="true">
+          <span class="dim-seg seg-you">80</span>
+          <span class="dim-seg seg-forest">+80</span>
+        </div>
+        <p class="dim-total" aria-hidden="true">= USD 160</p>
+      </div>
+      <a class="give" data-amount="80" target="_blank" rel="noopener">
+        <span data-es="Dona USD 80">Give USD 80</span>
+        <span class="sr-only" data-es=" — Forest agrega USD 80, total USD 160"> — Forest adds USD 80, USD 160 total</span>
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="dim">
+        <div class="dim-keys" aria-hidden="true">
+          <span class="dim-key" data-es="Tú">You</span>
+          <span class="dim-key">Forest</span>
+        </div>
+        <div class="dim-track" aria-hidden="true">
+          <span class="dim-seg seg-you">100</span>
+          <span class="dim-seg seg-forest">+100</span>
+        </div>
+        <p class="dim-total" aria-hidden="true">= USD 200</p>
+      </div>
+      <a class="give" data-amount="100" target="_blank" rel="noopener">
+        <span data-es="Dona USD 100">Give USD 100</span>
+        <span class="sr-only" data-es=" — Forest agrega USD 100, total USD 200"> — Forest adds USD 100, USD 200 total</span>
+      </a>
+    </div>
+  </div>
+
+  <p class="meta source" data-es="Cada botón abre una página de pago de QuickBooks en una pestaña nueva. Tarjeta o transferencia bancaria. No hay límite de veces que una misma persona puede donar.">Each button opens a QuickBooks payment page in a new tab. Card or bank transfer. There is no limit on how many times one person can give.</p>
+
+  <noscript>
+    <div class="note">
+      <span class="note-k">JavaScript off</span>
+      <p>The payment links are wired by a small script. Write to <a href="mailto:elias@forestcol.com">elias@forestcol.com</a> and we will send you a direct link for any amount.</p>
+    </div>
+  </noscript>
+</section>
+
+<!-- 4. WHERE IT GOES ===================================================== -->
+<section class="invert" aria-labelledby="split-h">
+  <div class="wrap band">
+    <div class="rule">
+      <span data-es="A dónde va">Where it goes</span>
+      <span class="rule-line"></span>
+      <span class="rule-note" data-es="División sobre el bruto">Split on gross</span>
+    </div>
+
+    <h2 id="split-h" data-es="Partido a la mitad. Las dos mitades son el punto.">Split in half. Both halves are the point.</h2>
+
+    <div class="split">
+      <div class="half">
+        <span class="half-pct">50%</span>
+        <h3 data-es="Soporte directo a familias cafeteras">Direct support to coffee-growing families</h3>
+        <p data-es="Entrega directa a familias productoras del área afectada cuyos hogares fueron golpeados: efectivo y elementos esenciales, sin pasar por una cadena de intermediarios.">Direct delivery to producing families inside the affected area whose households were hit: cash and essential supplies, without a chain of intermediaries in between.</p>
+        <!-- TODO: beneficiary selection criteria — who qualifies, who decides, how it is documented. Do not publish this page with the placeholder below still visible. -->
+        <p class="meta pending" data-es="Criterio de selección de familias beneficiarias: por definir.">Beneficiary selection criteria: to be defined.</p>
+      </div>
+
+      <div class="half">
+        <span class="half-pct">50%</span>
+        <h3 data-es="Reconstrucción de viviendas">Home reconstruction</h3>
+        <p data-es="Reconstrucción de viviendas específicas de personas damnificadas: casas identificadas una por una, no un fondo general de reconstrucción.">Rebuilding specific homes of specific people: houses identified one by one, not a general reconstruction fund.</p>
+        <!-- TODO: on-the-ground executing partner — legal name, role, and how funds reach them. -->
+        <p class="meta pending" data-es="Socio ejecutor en terreno: por confirmar.">On-the-ground executing partner: to be confirmed.</p>
+      </div>
+    </div>
+
+    <!--
+      BUSINESS DECISION TO CONFIRM: the 50/50 split is stated as calculated on
+      the GROSS amount donated, before payment processing fees. Splitting on
+      gross implies Forest Coffee absorbs the QuickBooks processing fee out of
+      its own funds rather than out of the donation. Confirm with finance
+      before launch; if the decision changes to net, this paragraph and the
+      "Split on gross" section note both have to change.
+    -->
+    <p data-es="La división 50/50 se calcula sobre el monto bruto: los USD 20, 40, 60, 80 o 100 completos que donas, antes de descontar comisiones de procesamiento. Forest asume esas comisiones. El dólar que iguala Forest se divide por la misma mitad.">The 50/50 split is calculated on the gross amount: the full USD 20, 40, 60, 80 or 100 you give, before payment processing fees are deducted. Forest absorbs those fees. The dollar Forest matches is split down the same line.</p>
+  </div>
+</section>
+
+<!-- 5. TRANSPARENCY ====================================================== -->
+<section class="wrap band" aria-labelledby="transparency-h">
+  <div class="rule">
+    <span data-es="Transparencia">Transparency</span>
+    <span class="rule-line"></span>
+    <span class="rule-note" data-es="Léelo antes de donar">Read before you give</span>
+  </div>
+
+  <h2 id="transparency-h" data-es="Lo que puedes esperar de nosotros.">What you can hold us to.</h2>
+
+  <div class="notes">
+    <div class="note">
+      <span class="note-k" data-es="Reporte">Reporting</span>
+      <!-- TODO: reporting mechanism — cadence (monthly? at close?), channel (email to donors? public page? PDF?), and level of detail (aggregate totals or itemised disbursements). -->
+      <p data-es="Publicaremos cuánto entró, cuánto puso Forest por el matching y a dónde salió cada dólar, incluida la mitad igualada. El canal y la frecuencia del reporte están por definir.">We will publish what came in, what Forest added through the match, and where every dollar went — including the matched half. The reporting channel and cadence are still to be defined.</p>
+      <p class="meta pending" data-es="Mecanismo y frecuencia del reporte: por definir.">Reporting mechanism and frequency: to be defined.</p>
+    </div>
+
+    <div class="note">
+      <span class="note-k" data-es="Impuestos">Taxes</span>
+      <p data-es="Las donaciones las recibe Forest Coffee LLC, una empresa comercial, no una organización sin ánimo de lucro registrada. Eso significa que tu aporte no es deducible de impuestos. Lo decimos aquí arriba y no en letra pequeña, porque la alternativa es que lo descubras en temporada de declaración.">Donations are received by Forest Coffee LLC, a trading company — not a registered charity. That means your contribution is not tax-deductible. We are saying it here rather than in fine print, because the alternative is you finding out at filing season.</p>
+    </div>
+
+    <div class="note">
+      <span class="note-k" data-es="Contacto">Contact</span>
+      <p data-es="¿Preguntas sobre la campaña, el matching o el destino de los fondos? Escribe directamente y respondemos.">Questions about the campaign, the match, or where the money lands? Write directly and you will get an answer.</p>
+      <p><a id="contact-link" href="mailto:elias@forestcol.com">elias@forestcol.com</a></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- 6. FOOTER ============================================================ -->
+<footer class="wrap">
+  <div class="foot">
+    <span>Forest Coffee LLC — <span data-es="Exportador de café verde de especialidad">Specialty green coffee exporter</span></span>
+    <span data-es="Colombia · 2026">Colombia · 2026</span>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   Editable campaign configuration. Everything that changes between campaign
+   states lives here — nothing below this object needs to be touched to update
+   the links, the cap, or the closing date.
+   ========================================================================== */
+const CONFIG = {
+  paymentLinks: {
+    20:  "https://connect.intuit.com/portal/app/CommerceNetwork/view/scs-v1-ff64b0fd20a84d3da109c6b657a431b56ecb2ed9e1834ca6a9febe8cf8fe11885c854fe42c8946e89c0d960e22d36d23-1?locale=EN_US",
+    40:  "https://connect.intuit.com/portal/app/CommerceNetwork/view/scs-v1-1b1010dd7819429f8f83714f7b9dac4b8064d1bdf8d640cfbceee4afde2a632efc23e796417b450f88e1cc6b979d9997-1?locale=EN_US",
+    60:  "https://connect.intuit.com/portal/app/CommerceNetwork/view/scs-v1-573357ce3bfe46e3a321c45e7b4a5c878812002d7cc2401996889540a6e9e6c80cf043a0fb084b4ab96da96df0444081?locale=EN_US",
+    80:  "https://connect.intuit.com/portal/app/CommerceNetwork/view/scs-v1-7b337ba3e5d2416197b13eadbdd53f62e7d374841681465ea44f2ddb3d717dbc9b34d01189d74f99ab993bd1c9a33db0-0?locale=EN_US",
+    100: "https://connect.intuit.com/portal/app/CommerceNetwork/view/scs-v1-034a8b143a8c44049bb26064e91d45493a9822349b2a4a70a08e0d0d1373b23945105a41ce7544c7ad6bf7eb0e629a56-0?locale=EN_US"
+  },
+  matchCapUsd:   null,          // TODO: set the ceiling on Forest's own contribution, e.g. 25000
+  campaignEnds:  "YYYY-MM-DD",  // TODO: set the matching close date, e.g. "2026-09-30"
+  contactEmail:  "elias@forestcol.com"
+};
+
+(function () {
+  "use strict";
+
+  var STRINGS = {
+    disabledTitle: {
+      en: "This payment link is not live yet. Write to " + CONFIG.contactEmail + ".",
+      es: "Este link de pago aún no está activo. Escribe a " + CONFIG.contactEmail + "."
+    },
+    disabledNote: { en: "Link not live yet", es: "Link aún no activo" },
+    announced:    { en: "To be announced", es: "Por anunciar" }
+  };
+
+  var lang = "en";
+
+  /* --- Payment buttons -------------------------------------------------- */
+
+  // A link is only wired if CONFIG still holds a real https URL for it.
+  // Anything else renders as a visibly disabled control — never a dead link.
+  function isLive(url) {
+    return typeof url === "string" && /^https:\/\/\S+$/.test(url) && url.indexOf("PEGAR_URL") !== 0;
+  }
+
+  var buttons = Array.prototype.slice.call(document.querySelectorAll(".give"));
+
+  buttons.forEach(function (el) {
+    var amount = el.getAttribute("data-amount");
+    var url = CONFIG.paymentLinks[amount];
+
+    if (isLive(url)) {
+      el.setAttribute("href", url);
+      return;
+    }
+
+    el.classList.add("is-disabled");
+    el.setAttribute("aria-disabled", "true");
+    el.removeAttribute("target");
+    el.removeAttribute("rel");
+
+    var note = document.createElement("span");
+    note.className = "give-note";
+    note.setAttribute("data-disabled-note", "true");
+    el.parentNode.insertBefore(note, el.nextSibling);
+  });
+
+  /* --- Cap and closing date -------------------------------------------- */
+
+  function formatCap(value) {
+    if (typeof value !== "number" || !isFinite(value) || value <= 0) return null;
+    return "USD " + value.toLocaleString("en-US");
+  }
+
+  function formatDate(value, locale) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) return null;
+    // Parse as local midday so the rendered date never slips a day by timezone.
+    var d = new Date(value + "T12:00:00");
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" });
+  }
+
+  function renderConfigValues() {
+    var capEl = document.getElementById("cap-value");
+    var endsEl = document.getElementById("ends-value");
+    var cap = formatCap(CONFIG.matchCapUsd);
+    var ends = formatDate(CONFIG.campaignEnds, lang === "es" ? "es-CO" : "en-US");
+
+    capEl.textContent = cap || STRINGS.announced[lang];
+    capEl.classList.toggle("pending", !cap);
+
+    endsEl.textContent = ends || STRINGS.announced[lang];
+    endsEl.classList.toggle("pending", !ends);
+  }
+
+  var contact = document.getElementById("contact-link");
+  contact.setAttribute("href", "mailto:" + CONFIG.contactEmail);
+  contact.textContent = CONFIG.contactEmail;
+
+  /* --- Language toggle -------------------------------------------------- */
+
+  // English is the markup default, so the page reads correctly with no JS.
+  // The English original is captured once, then the two versions are swapped.
+  var translatable = Array.prototype.slice.call(document.querySelectorAll("[data-es]"));
+  translatable.forEach(function (el) {
+    el.setAttribute("data-en", el.textContent);
+  });
+
+  var langButtons = Array.prototype.slice.call(document.querySelectorAll(".lang-btn"));
+
+  function setLanguage(next) {
+    lang = next === "es" ? "es" : "en";
+    document.documentElement.lang = lang;
+
+    translatable.forEach(function (el) {
+      el.textContent = el.getAttribute("data-" + lang);
+    });
+
+    document.querySelectorAll("[data-disabled-note]").forEach(function (el) {
+      el.textContent = STRINGS.disabledNote[lang];
+    });
+    document.querySelectorAll(".give.is-disabled").forEach(function (el) {
+      el.setAttribute("title", STRINGS.disabledTitle[lang]);
+    });
+
+    langButtons.forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.getAttribute("data-lang") === lang));
+    });
+
+    renderConfigValues();
+  }
+
+  langButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setLanguage(btn.getAttribute("data-lang"));
+    });
+  });
+
+  // Spanish-speaking visitors land in Spanish; everyone else gets English.
+  setLanguage((navigator.language || "en").slice(0, 2) === "es" ? "es" : "en");
+})();
+</script>
