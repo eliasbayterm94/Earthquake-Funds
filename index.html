@@ -1,12 +1,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Forest Coffee — Earthquake Relief for Colombian Coffee Families</title>
-<meta name="description" content="Forest Coffee matches every dollar 1:1 for families hit by the August 10, 2026 earthquake in Chocó and the Eje Cafetero. Five amounts, split 50/50 between direct family support and home reconstruction.">
+<title>Together for Colombia — Forest Coffee Earthquake Relief</title>
+<meta name="description" content="For every dollar donated, Forest Coffee adds another dollar. Relief for the coffee-growing families and the communities of Pereira, Quimbaya and Montenegro after the August 10, 2026 earthquake. Five amounts, split equally between farmer recovery and humanitarian relief.">
 <meta name="theme-color" content="#1B203D">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Forest Coffee — Earthquake Relief">
+<meta property="og:title" content="Together for Colombia — Forest Coffee">
 <meta property="og:description" content="You give a dollar. Forest adds a dollar. For the coffee-growing families inside the affected area.">
+<meta property="og:image" content="assets/together-for-colombia.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +15,17 @@
 
 <style>
 /* ==========================================================================
-   Forest Coffee — earthquake relief landing page
+   Forest Coffee — "Together for Colombia" earthquake relief landing page
    Single file, no build step. Design system: a construction drawing on dark
-   paper. Colour grammar is load-bearing: YELLOW MEANS FOREST PUT IT THERE.
-   Nothing else may be yellow.
+   paper, continuous with the campaign poster used as the cover.
+
+   Colour grammar, and it is load-bearing:
+     SKY BLUE  = the dollar Forest adds, and the campaign's structural voice.
+                 This follows the poster, where the matching promise and the
+                 two 50% figures are all set in sky blue.
+     YELLOW    = action, and nothing else. Only the donate buttons are yellow,
+                 so the one thing you can actually do on this page is the one
+                 thing the poster does not contain.
    ========================================================================== */
 
 :root {
@@ -30,6 +38,7 @@
   --ground: var(--navy);
   --fg:     var(--off);
   --muted:  var(--sky);
+  --match:  var(--sky);          /* the fill for Forest's half of a dimension */
   --line:   rgba(149, 181, 206, 0.38);
   --focus:  var(--yellow);
 
@@ -121,6 +130,7 @@ a  { color: inherit; }
   --ground: var(--off);
   --fg:     var(--navy);
   --muted:  #4A5570;              /* sky blue fails AA on off-white; this passes */
+  --match:  var(--navy);          /* ...and so does sky blue as a fill here */
   --line:   rgba(27, 32, 61, 0.28);
   --focus:  var(--navy);
   background: var(--ground);
@@ -180,6 +190,7 @@ a  { color: inherit; }
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
+.brand-sep { color: var(--muted); }
 
 .lang { display: flex; gap: 1px; align-items: stretch; }
 .lang-btn {
@@ -199,17 +210,33 @@ a  { color: inherit; }
   border-color: var(--fg);
 }
 
+/* --- Cover -------------------------------------------------------------- */
+
+/* The campaign poster, reproduced at plate size. Both max dimensions are set
+   with auto sizing so the 9:16 ratio is never distorted, and the height cap
+   keeps the fold reachable on a laptop. */
+.cover { padding-block: clamp(1.5rem, 4vw, 2.75rem) clamp(0.5rem, 2vw, 1rem); }
+.cover-fig { margin: 0; display: grid; justify-items: center; }
+.cover-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(27rem, 100%);
+  max-height: min(80vh, 44rem);
+  border: 1px solid var(--line);
+}
+
 /* --- Hero --------------------------------------------------------------- */
 
-.hero { padding-block: clamp(2.75rem, 7vw, 5rem) clamp(3rem, 7vw, 5rem); }
+.hero { padding-block: clamp(2rem, 5vw, 3.25rem) clamp(3rem, 7vw, 5rem); }
 .hero-head { display: grid; gap: clamp(1.25rem, 3vw, 1.75rem); max-width: 58rem; }
 .hero-lead { font-size: var(--t-lead); line-height: 1.5; }
 .hero-claim {
   font-size: var(--t-lead);
   font-weight: 500;
   line-height: 1.4;
-  color: var(--yellow);
-  max-width: 34ch;
+  color: var(--match);
+  max-width: 40ch;
 }
 
 .figures {
@@ -284,15 +311,15 @@ a  { color: inherit; }
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
-.seg-you    { border: 1px solid var(--fg);     color: var(--fg);   background: transparent; }
-.seg-forest { border: 1px solid var(--yellow); color: var(--navy); background: var(--yellow); border-left-width: 0; }
+.seg-you    { border: 1px solid var(--fg);    color: var(--fg);   background: transparent; }
+.seg-forest { border: 1px solid var(--match); color: var(--navy); background: var(--match); border-left-width: 0; }
 
 .dim-total {
   margin-top: 0.9rem;
   font-family: var(--mono);
   font-size: var(--t-m);
   font-weight: 500;
-  color: var(--yellow);
+  color: var(--match);
   letter-spacing: -0.02em;
 }
 
@@ -392,6 +419,8 @@ noscript .note { display: block; margin-top: 1.25rem; }
 
 /* --- 50/50 split: a plan divided by a party wall ------------------------ */
 
+.split-lead { font-size: var(--t-lead); line-height: 1.5; margin-top: 1.25rem; max-width: 54ch; }
+
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -404,14 +433,25 @@ noscript .note { display: block; margin-top: 1.25rem; }
   gap: 0.9rem;
   align-content: start;
 }
-.half + .half { border-left: 3px solid var(--yellow); }   /* the party wall */
+.half + .half { border-left: 2px solid var(--match); }   /* the party wall */
 .half-pct {
-  font-family: var(--mono);
-  font-size: var(--t-m);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-family: var(--display);
+  font-size: clamp(2.6rem, 1.6rem + 4vw, 4rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--match);
 }
-.half h3 { font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem); }
+.half h3 { font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem); color: var(--match); }
+
+/* Sub-programmes inside each half — the poster's bolded run-in headings. */
+.items { display: grid; gap: 1.1rem; margin: 0; }
+.items dt {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+}
+.items dd { margin: 0.15rem 0 0; max-width: 46ch; }
 
 /* --- Transparency ------------------------------------------------------- */
 
@@ -457,7 +497,7 @@ noscript .note { display: block; margin-top: 1.25rem; }
 
 @media (max-width: 40rem) {
   .split { grid-template-columns: 1fr; }
-  .half + .half { border-left: 0; border-top: 3px solid var(--yellow); }
+  .half + .half { border-left: 0; border-top: 2px solid var(--match); }
   .rule { flex-wrap: wrap; }
   .rule-note { width: 100%; text-align: left; }
   .rule-line { min-width: 2rem; }
@@ -486,7 +526,7 @@ noscript .note { display: block; margin-top: 1.25rem; }
 
 <header class="wrap">
   <div class="masthead">
-    <span class="brand">Forest Coffee</span>
+    <span class="brand">Forest Coffee <span class="brand-sep" aria-hidden="true">—</span> <span data-es="Juntos por Colombia">Together for Colombia</span></span>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
       <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
@@ -494,17 +534,28 @@ noscript .note { display: block; margin-top: 1.25rem; }
   </div>
 </header>
 
-<!-- 1. HERO ============================================================== -->
 <main>
+<!-- 0. COVER ============================================================= -->
+<section class="wrap cover" aria-label="Campaign poster">
+  <figure class="cover-fig">
+    <img class="cover-img" id="cover-img"
+         src="assets/together-for-colombia.jpg"
+         width="1080" height="1920" decoding="async"
+         alt="Together for Colombia — Forest Coffee campaign poster. For every dollar donated, Forest adds another dollar. Every donation is split equally between farmer recovery and humanitarian relief for Pereira, Quimbaya and Montenegro. The same information is set out in full in the sections below."
+         data-es-alt="Juntos por Colombia — afiche de la campaña de Forest Coffee. Por cada dólar donado, Forest pone otro dólar. Cada donación se divide por partes iguales entre recuperación cafetera y ayuda humanitaria para Pereira, Quimbaya y Montenegro. La misma información está desarrollada en las secciones siguientes.">
+  </figure>
+</section>
+
+<!-- 1. HERO ============================================================== -->
 <section class="wrap hero">
   <div class="hero-head">
-    <p class="eyebrow" data-es="Chocó · Eje Cafetero · Valle del Cauca">Chocó · Eje Cafetero · Valle del Cauca</p>
+    <p class="eyebrow" data-es="Pereira · Quimbaya · Montenegro">Pereira · Quimbaya · Montenegro</p>
 
     <h1 data-es="El terremoto golpeó las fincas que nos venden café.">The earthquake hit the farms we buy from.</h1>
 
-    <p class="hero-lead" data-es="El 10 de agosto de 2026, un terremoto de magnitud 7.4 con epicentro en San José del Palmar, Chocó, golpeó el occidente y el centro de Colombia. El Eje Cafetero está dentro del área afectada. Las familias productoras con las que trabaja Forest, también.">On August 10, 2026, a magnitude 7.4 earthquake with its epicenter in San José del Palmar, Chocó, struck western and central Colombia. The Eje Cafetero is inside the affected area. So are the producing families Forest works with.</p>
+    <p class="hero-lead" data-es="El 10 de agosto de 2026, un terremoto de magnitud 7.4 con epicentro en San José del Palmar, Chocó, golpeó el occidente y el centro de Colombia. El Eje Cafetero está dentro del área afectada, y las familias productoras con las que trabaja Forest también.">On August 10, 2026, a magnitude 7.4 earthquake with its epicenter in San José del Palmar, Chocó, struck western and central Colombia. The Eje Cafetero is inside the affected area, and so are the producing families Forest works with.</p>
 
-    <p class="hero-claim" data-es="Forest Coffee iguala cada dólar que dones, uno a uno.">Forest Coffee matches every dollar you give, one to one.</p>
+    <p class="hero-claim" data-es="Esta no es una causa que Forest eligió. Es la región donde Forest compra.">This is not a cause Forest picked. It is the region Forest buys from.</p>
 
     <a class="cta" href="#amounts" data-es="Elige un monto">Choose an amount</a>
   </div>
@@ -676,48 +727,64 @@ noscript .note { display: block; margin-top: 1.25rem; }
 </section>
 
 <!-- 4. WHERE IT GOES ===================================================== -->
-<section class="invert" aria-labelledby="split-h">
-  <div class="wrap band">
-    <div class="rule">
-      <span data-es="A dónde va">Where it goes</span>
-      <span class="rule-line"></span>
-      <span class="rule-note" data-es="División sobre el bruto">Split on gross</span>
-    </div>
-
-    <h2 id="split-h" data-es="Partido a la mitad. Las dos mitades son el punto.">Split in half. Both halves are the point.</h2>
-
-    <div class="split">
-      <div class="half">
-        <span class="half-pct">50%</span>
-        <h3 data-es="Soporte directo a familias cafeteras">Direct support to coffee-growing families</h3>
-        <p data-es="Entrega directa a familias productoras del área afectada cuyos hogares fueron golpeados: efectivo y elementos esenciales, sin pasar por una cadena de intermediarios.">Direct delivery to producing families inside the affected area whose households were hit: cash and essential supplies, without a chain of intermediaries in between.</p>
-        <!-- TODO: beneficiary selection criteria — who qualifies, who decides, how it is documented. Do not publish this page with the placeholder below still visible. -->
-        <p class="meta pending" data-es="Criterio de selección de familias beneficiarias: por definir.">Beneficiary selection criteria: to be defined.</p>
-      </div>
-
-      <div class="half">
-        <span class="half-pct">50%</span>
-        <h3 data-es="Reconstrucción de viviendas">Home reconstruction</h3>
-        <p data-es="Reconstrucción de viviendas específicas de personas damnificadas: casas identificadas una por una, no un fondo general de reconstrucción.">Rebuilding specific homes of specific people: houses identified one by one, not a general reconstruction fund.</p>
-        <!-- TODO: on-the-ground executing partner — legal name, role, and how funds reach them. -->
-        <p class="meta pending" data-es="Socio ejecutor en terreno: por confirmar.">On-the-ground executing partner: to be confirmed.</p>
-      </div>
-    </div>
-
-    <!--
-      BUSINESS DECISION TO CONFIRM: the 50/50 split is stated as calculated on
-      the GROSS amount donated, before payment processing fees. Splitting on
-      gross implies Forest Coffee absorbs the QuickBooks processing fee out of
-      its own funds rather than out of the donation. Confirm with finance
-      before launch; if the decision changes to net, this paragraph and the
-      "Split on gross" section note both have to change.
-    -->
-    <p data-es="La división 50/50 se calcula sobre el monto bruto: los USD 20, 40, 60, 80 o 100 completos que donas, antes de descontar comisiones de procesamiento. Forest asume esas comisiones. El dólar que iguala Forest se divide por la misma mitad.">The 50/50 split is calculated on the gross amount: the full USD 20, 40, 60, 80 or 100 you give, before payment processing fees are deducted. Forest absorbs those fees. The dollar Forest matches is split down the same line.</p>
+<section class="wrap band" aria-labelledby="split-h">
+  <div class="rule">
+    <span data-es="A dónde va">Where it goes</span>
+    <span class="rule-line"></span>
+    <span class="rule-note" data-es="División sobre el bruto">Split on gross</span>
   </div>
+
+  <h2 id="split-h" data-es="Partido por partes iguales. Las dos mitades son el punto.">Split equally. Both halves are the point.</h2>
+
+  <p class="split-lead" data-es="Cada donación se divide en partes iguales entre recuperación cafetera y ayuda humanitaria en Pereira (Risaralda), Quimbaya y Montenegro (Quindío).">Every donation is split equally between farmer recovery and humanitarian relief in Pereira (Risaralda), Quimbaya and Montenegro (Quindío).</p>
+
+  <div class="split">
+    <div class="half">
+      <span class="half-pct">50%</span>
+      <h3 data-es="Recuperación cafetera">Farmer Relief</h3>
+      <dl class="items">
+        <dt data-es="Recuperación agrícola">Agricultural Recovery</dt>
+        <dd data-es="Enviado a la Federación Nacional de Cafeteros para reconstruir fincas y cultivos dañados por el terremoto.">Sent to the Colombian Coffee Growers Federation to rebuild farms and crops damaged by the earthquake.</dd>
+
+        <dt data-es="Soporte directo">Direct Support</dt>
+        <dd data-es="Asistencia a pequeños productores rurales de la región cafetera.">Assistance to small rural producers in the coffee region.</dd>
+
+        <dt data-es="Sostenibilidad">Sustainability</dt>
+        <dd data-es="Recuperación económica y acompañamiento de largo plazo para las familias caficultoras.">Economic recovery and long-term support for farming families.</dd>
+      </dl>
+      <!-- TODO: beneficiary selection criteria — which producers qualify, who decides, and how it is documented. The Federation is named as the channel; the selection rule underneath it is still undefined. -->
+      <p class="meta pending" data-es="Criterio de selección de productores beneficiarios: por definir.">Beneficiary selection criteria: to be defined.</p>
+    </div>
+
+    <div class="half">
+      <span class="half-pct">50%</span>
+      <h3 data-es="Suministros para Pereira">Supplies for Pereira</h3>
+      <dl class="items">
+        <dt data-es="Bienes esenciales">Essential Goods</dt>
+        <dd data-es="Compra de alimentos, agua potable, medicamentos y ayuda humanitaria.">Purchasing food, clean water, medicines, and humanitarian aid.</dd>
+
+        <dt data-es="Asistencia directa">Direct Assistance</dt>
+        <dd data-es="Entrega de bienes básicos de socorro a las familias afectadas en la ciudad.">Delivery of basic relief goods to affected families in the city.</dd>
+      </dl>
+      <!-- TODO: on-the-ground executing partner for this half — who purchases the goods, who delivers them, and under whose legal name. -->
+      <p class="meta pending" data-es="Socio ejecutor en terreno para esta mitad: por confirmar.">On-the-ground executing partner for this half: to be confirmed.</p>
+    </div>
+  </div>
+
+  <!--
+    BUSINESS DECISION TO CONFIRM: the 50/50 split is stated as calculated on
+    the GROSS amount donated, before payment processing fees. Splitting on
+    gross implies Forest Coffee absorbs the QuickBooks processing fee out of
+    its own funds rather than out of the donation. Confirm with finance
+    before launch; if the decision changes to net, this paragraph and the
+    "Split on gross" section note both have to change.
+  -->
+  <p data-es="La división se calcula sobre el monto bruto: los USD 20, 40, 60, 80 o 100 completos que donas, antes de descontar comisiones de procesamiento. Forest asume esas comisiones. El dólar que iguala Forest se divide por la misma línea.">The split is calculated on the gross amount: the full USD 20, 40, 60, 80 or 100 you give, before payment processing fees are deducted. Forest absorbs those fees. The dollar Forest matches is split down the same line.</p>
 </section>
 
 <!-- 5. TRANSPARENCY ====================================================== -->
-<section class="wrap band" aria-labelledby="transparency-h">
+<section class="invert" aria-labelledby="transparency-h">
+ <div class="wrap band">
   <div class="rule">
     <span data-es="Transparencia">Transparency</span>
     <span class="rule-line"></span>
@@ -745,6 +812,7 @@ noscript .note { display: block; margin-top: 1.25rem; }
       <p><a id="contact-link" href="mailto:elias@forestcol.com">elias@forestcol.com</a></p>
     </div>
   </div>
+ </div>
 </section>
 </main>
 
@@ -847,6 +915,20 @@ const CONFIG = {
     endsEl.classList.toggle("pending", !ends);
   }
 
+  /* --- Cover ------------------------------------------------------------ */
+
+  // If the poster asset is missing, drop the whole cover rather than leave a
+  // broken-image box at the top of a relief campaign.
+  var cover = document.getElementById("cover-img");
+  if (cover) {
+    var dropCover = function () {
+      var section = cover.parentNode && cover.parentNode.parentNode;
+      if (section) section.hidden = true;
+    };
+    cover.addEventListener("error", dropCover);
+    if (cover.complete && cover.naturalWidth === 0) dropCover();
+  }
+
   var contact = document.getElementById("contact-link");
   contact.setAttribute("href", "mailto:" + CONFIG.contactEmail);
   contact.textContent = CONFIG.contactEmail;
@@ -860,6 +942,12 @@ const CONFIG = {
     el.setAttribute("data-en", el.textContent);
   });
 
+  // Alt text is an attribute, so it needs its own capture-and-swap pass.
+  var translatableAlts = Array.prototype.slice.call(document.querySelectorAll("[data-es-alt]"));
+  translatableAlts.forEach(function (el) {
+    el.setAttribute("data-en-alt", el.getAttribute("alt") || "");
+  });
+
   var langButtons = Array.prototype.slice.call(document.querySelectorAll(".lang-btn"));
 
   function setLanguage(next) {
@@ -868,6 +956,10 @@ const CONFIG = {
 
     translatable.forEach(function (el) {
       el.textContent = el.getAttribute("data-" + lang);
+    });
+
+    translatableAlts.forEach(function (el) {
+      el.setAttribute("alt", el.getAttribute("data-" + lang + "-alt"));
     });
 
     document.querySelectorAll("[data-disabled-note]").forEach(function (el) {
