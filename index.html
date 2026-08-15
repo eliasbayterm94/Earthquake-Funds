@@ -41,6 +41,9 @@
   --muted:  var(--sky);
   --match:  var(--sky);          /* the fill for Forest's half of a dimension */
   --line:   rgba(149, 181, 206, 0.38);
+  /* Opaque twin of --line. Grid hairlines are drawn per tile and overlap in
+     the gap, so a translucent colour would double up and read darker there. */
+  --line-solid: #495974;
   --focus:  var(--yellow);
 
   --display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
@@ -137,6 +140,7 @@ a  { color: inherit; }
   --muted:  #4A5570;              /* sky blue fails AA on off-white; this passes */
   --match:  var(--navy);          /* ...and so does sky blue as a fill here */
   --line:   rgba(27, 32, 61, 0.28);
+  --line-solid: #B9BABE;
   --focus:  var(--navy);
   background: var(--ground);
   color: var(--fg);
@@ -294,15 +298,24 @@ a  { color: inherit; }
   max-width: 40ch;
 }
 
+/* Hairlines are drawn by the tiles themselves, never by the container behind
+   them. With auto-fit, the last row is usually short — a container background
+   would show through those empty cells as solid blocks. */
+/* Four figures, so the column count steps 1 -> 2 -> 4 and skips 3, which
+   would leave two dead cells in the last row. */
 .figures {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  grid-template-columns: 1fr;
   gap: 1px;
   margin-top: clamp(2.5rem, 6vw, 3.5rem);
-  background: var(--line);
-  border: 1px solid var(--line);
 }
-.figure { background: var(--ground); padding: 1.15rem 1.15rem 1.25rem; }
+@media (min-width: 22rem) { .figures { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 44rem) { .figures { grid-template-columns: repeat(4, 1fr); } }
+.figure {
+  background: var(--ground);
+  box-shadow: 0 0 0 1px var(--line-solid);
+  padding: 1.15rem 1.15rem 1.25rem;
+}
 .figure-n {
   font-family: var(--mono);
   font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
@@ -410,13 +423,33 @@ a  { color: inherit; }
 
 .amounts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  /* Five cards plus the note make six tiles, and six divides evenly by 1, 2
+     and 3 — so every breakpoint fills its last row exactly. auto-fit cannot
+     promise that: it lands on 4 columns and leaves three dead cells. At five
+     columns the cards take one row and the note becomes a full-width rail. */
+  grid-template-columns: 1fr;
   gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
 }
+@media (min-width: 22rem)  { .amounts { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 35rem)  { .amounts { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 60rem)  {
+  .amounts { grid-template-columns: repeat(5, 1fr); }
+  .amounts-note { grid-column: 1 / -1; }
+}
+
+.amounts-note {
+  background: var(--ground);
+  box-shadow: 0 0 0 1px var(--line-solid);
+  padding: 1.25rem 1.15rem;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  max-width: none;
+}
+
 .card {
   background: var(--ground);
+  box-shadow: 0 0 0 1px var(--line-solid);
   padding: 1.25rem 1.15rem 1.15rem;
   display: flex;
   flex-direction: column;
@@ -534,12 +567,11 @@ noscript .note { display: block; margin-top: 1.25rem; }
 .notes {
   display: grid;
   gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
   margin-top: clamp(1.5rem, 4vw, 2rem);
 }
 .note {
   background: var(--ground);
+  box-shadow: 0 0 0 1px var(--line-solid);
   padding: clamp(1.25rem, 3vw, 1.75rem);
   display: grid;
   gap: 0.65rem;
@@ -811,9 +843,9 @@ noscript .note { display: block; margin-top: 1.25rem; }
         <span class="sr-only" data-es=" — Forest agrega USD 100, total USD 200"> — Forest adds USD 100, USD 200 total</span>
       </a>
     </div>
-  </div>
 
-  <p class="meta source" data-es="Cada botón abre una página de pago de QuickBooks en una pestaña nueva. Tarjeta o transferencia bancaria. No hay límite de veces que una misma persona puede donar.">Each button opens a QuickBooks payment page in a new tab. Card or bank transfer. There is no limit on how many times one person can give.</p>
+    <p class="meta amounts-note" data-es="Cada botón abre una página de pago de QuickBooks en una pestaña nueva. Tarjeta o transferencia bancaria. No hay límite de veces que una misma persona puede donar.">Each button opens a QuickBooks payment page in a new tab. Card or bank transfer. There is no limit on how many times one person can give.</p>
+  </div>
 
   <noscript>
     <div class="note">
