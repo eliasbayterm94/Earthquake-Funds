@@ -1115,7 +1115,24 @@ const CONFIG = {
   // Leave raisedUsd as null (or 0) and the whole progress section is removed
   // from the page rather than shown empty.
   raisedUsd:     null,          // e.g. 3240
-  raisedAsOf:    "YYYY-MM-DD"   // e.g. "2026-08-22"
+  raisedAsOf:    "YYYY-MM-DD",  // e.g. "2026-08-22"
+
+  // --- Live totals from a Google Sheet ------------------------------------
+  // Optional. In the sheet: File > Share > Publish to web > CSV. Paste the
+  // published URL here — it ends in output=csv. A normal /edit link will NOT
+  // work; it serves HTML, not CSV.
+  //
+  // The sheet is two columns, key in the first and value in the second, in
+  // any row order. Recognised keys:
+  //     raised_usd      3240            <- donations only, not the match
+  //     as_of           2026-08-22      <- plain text, YYYY-MM-DD
+  //     match_cap_usd   10000           <- optional, overrides matchCapUsd
+  //     campaign_ends   2026-09-30      <- optional, overrides campaignEnds
+  //
+  // Currency formatting is tolerated: $3,240.00 reads as 3240. Any key that
+  // is missing, or a sheet that cannot be read at all, silently falls back to
+  // the values above — the page never blocks on the network.
+  sheetCsvUrl:   ""
 };
 
 (function () {
@@ -1186,9 +1203,20 @@ const CONFIG = {
     });
   }
 
+  // Everything the page renders reads from here, never from CONFIG directly.
+  // CONFIG seeds it; the published sheet, if there is one, overwrites parts of
+  // it later. That keeps one code path whether the sheet loads, fails, or is
+  // not configured at all.
+  var live = {
+    cap:    CONFIG.matchCapUsd,
+    ends:   CONFIG.campaignEnds,
+    raised: CONFIG.raisedUsd,
+    asOf:   CONFIG.raisedAsOf
+  };
+
   function renderConfigValues() {
-    paint("cap", formatCap(CONFIG.matchCapUsd));
-    paint("ends", formatDate(CONFIG.campaignEnds, lang === "es" ? "es-CO" : "en-US"));
+    paint("cap", formatCap(live.cap));
+    paint("ends", formatDate(live.ends, lang === "es" ? "es-CO" : "en-US"));
   }
 
   /* --- Progress --------------------------------------------------------- */
@@ -1221,8 +1249,8 @@ const CONFIG = {
   // positive total and a date are present — an undated total reads as live.
   function renderProgress() {
     var section = document.getElementById("progress");
-    var raised = CONFIG.raisedUsd;
-    var stamp = formatDate(CONFIG.raisedAsOf, lang === "es" ? "es-CO" : "en-US");
+    var raised = live.raised;
+    var stamp = formatDate(live.asOf, lang === "es" ? "es-CO" : "en-US");
 
     if (typeof raised !== "number" || !isFinite(raised) || raised <= 0) {
       section.hidden = true;
@@ -1231,12 +1259,12 @@ const CONFIG = {
     if (!stamp) {
       section.hidden = true;
       if (window.console) {
-        console.warn("Progress hidden: CONFIG.raisedUsd is set but CONFIG.raisedAsOf is not a valid YYYY-MM-DD date.");
+        console.warn("Progress hidden: a raised total is set but its date is not a valid YYYY-MM-DD.");
       }
       return;
     }
 
-    var cap = CONFIG.matchCapUsd;
+    var cap = live.cap;
     var hasCap = typeof cap === "number" && isFinite(cap) && cap > 0;
     var matched = hasCap ? Math.min(raised, cap) : raised;
     var axisMax = Math.max(raised, hasCap ? cap : 0);
@@ -1259,6 +1287,109 @@ const CONFIG = {
       : copy.left(formatCap((hasCap ? cap : 0) - matched));
 
     section.hidden = false;
+  }
+
+  /* --- Published sheet -------------------------------------------------- */
+
+  // Minimal RFC 4180 reader. Quoted fields matter here: a currency-formatted
+  // cell exports as "3,240", and splitting on commas would read it as 3.
+  function parseCsv(text) {
+    var rows = [], row = [], field = "", quoted = false, i = 0;
+    while (i < text.length) {
+      var ch = text.charAt(i);
+      if (quoted) {
+        if (ch === '"') {
+          if (text.charAt(i + 1) === '"') { field += '"'; i += 2; continue; }
+          quoted = false; i++; continue;
+        }
+        field += ch; i++; continue;
+      }
+      if (ch === '"') { quoted = true; i++; continue; }
+      if (ch === ",") { row.push(field); field = ""; i++; continue; }
+      if (ch === "\r") { i++; continue; }
+      if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
+      field += ch; i++;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function keyify(s) {
+    return String(s == null ? "" : s).trim().toLowerCase().replace(/[\s\-]+/g, "_");
+  }
+
+  // Tolerates $, thousands separators and stray spaces, so the sheet owner can
+  // format the cell as currency without breaking the page.
+  function toNumber(v) {
+    var s = String(v == null ? "" : v).replace(/[^0-9.\-]/g, "");
+    if (!/\d/.test(s)) return null;
+    var n = parseFloat(s);
+    return isFinite(n) ? n : null;
+  }
+
+  function toIsoDate(v) {
+    var s = String(v == null ? "" : v).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // Sheets exports an actual date cell in the document's locale; the common
+    // one is M/D/YYYY. Anything else is rejected rather than guessed at.
+    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) {
+      var pad = function (x) { return (x.length < 2 ? "0" : "") + x; };
+      return m[3] + "-" + pad(m[1]) + "-" + pad(m[2]);
+    }
+    return null;
+  }
+
+  function applySheet(text) {
+    var rows = parseCsv(text);
+    var map = {};
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].length >= 2) map[keyify(rows[i][0])] = rows[i][1];
+    }
+
+    var raised = toNumber(map.raised_usd);
+    var asOf   = toIsoDate(map.as_of);
+    var cap    = toNumber(map.match_cap_usd);
+    var ends   = toIsoDate(map.campaign_ends);
+
+    if (raised !== null) live.raised = raised;
+    if (asOf)            live.asOf   = asOf;
+    if (cap !== null)    live.cap    = cap;
+    if (ends)            live.ends   = ends;
+
+    if (raised !== null && !asOf && !toIsoDate(live.asOf) && window.console) {
+      console.warn('Sheet has raised_usd but no readable as_of date. Put it in as plain text, YYYY-MM-DD.');
+    }
+  }
+
+  function loadSheet() {
+    var url = CONFIG.sheetCsvUrl;
+    if (!url || !/^https:\/\//.test(url) || !window.fetch) return;
+
+    var controller = window.AbortController ? new AbortController() : null;
+    var timer = controller ? window.setTimeout(function () { controller.abort(); }, 6000) : null;
+    var done = function () { if (timer) window.clearTimeout(timer); };
+
+    window.fetch(url, controller ? { signal: controller.signal } : undefined)
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        done();
+        // A published sheet returns CSV. An /edit link returns an HTML page,
+        // which would otherwise be parsed into nonsense.
+        if (/^\s*</.test(text)) throw new Error("got HTML, not CSV — check the published URL");
+        applySheet(text);
+        renderConfigValues();
+        renderProgress();
+      })
+      .catch(function (err) {
+        done();
+        if (window.console) {
+          console.warn("Live totals not loaded, using the values in CONFIG instead:", err && err.message);
+        }
+      });
   }
 
   var contact = document.getElementById("contact-link");
@@ -1308,5 +1439,8 @@ const CONFIG = {
 
   // Spanish-speaking visitors land in Spanish; everyone else gets English.
   setLanguage((navigator.language || "en").slice(0, 2) === "es" ? "es" : "en");
+
+  // Fired last, and never awaited: the page is fully usable before it resolves.
+  loadSheet();
 })();
 </script>
