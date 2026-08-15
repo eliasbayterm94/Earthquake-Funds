@@ -415,6 +415,67 @@ a  { color: inherit; }
 }
 .pending { color: var(--muted); border-bottom: 1px dashed currentColor; }
 
+/* --- Progress ----------------------------------------------------------- */
+
+.progress {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 46rem;
+  margin-block: clamp(1.75rem, 4vw, 2.5rem);
+}
+.track-row {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 0.9rem;
+  align-items: center;
+}
+.track-key {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.track {
+  position: relative;
+  height: 2.1rem;
+  border: 1px solid var(--line);
+}
+.track-fill { height: 100%; width: 0; }
+.fill-you    { background: var(--fg); }
+.fill-forest { background: var(--match); }
+
+/* Marks where Forest's cap sits once donations have run past it. */
+.track-cap {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 1px;
+  background: var(--muted);
+}
+
+.track-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-left: calc(6rem + 0.9rem);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.progress-sum {
+  font-size: var(--t-lead);
+  line-height: 1.45;
+  max-width: 48ch;
+}
+.progress-sum strong { color: var(--match); font-weight: 700; }
+
+@media (max-width: 30rem) {
+  .track-row { grid-template-columns: 1fr; gap: 0.3rem; }
+  .track-axis { margin-left: 0; }
+}
+
 /* --- Amount cards ------------------------------------------------------- */
 
 .amounts {
@@ -637,6 +698,8 @@ noscript .note { display: block; margin-top: 1.25rem; }
 }
 </style>
 
+<noscript><style>.progress-band { display: none; }</style></noscript>
+
 <a class="skip" href="#amounts" data-es="Ir a los montos">Skip to the amounts</a>
 
 <header class="wrap">
@@ -739,6 +802,40 @@ noscript .note { display: block; margin-top: 1.25rem; }
   </dl>
 
   <p data-es="El tope es el techo del aporte propio de Forest, no el techo de la campaña. Las donaciones que lleguen después de alcanzarlo se destinan íntegras a las familias; simplemente dejan de duplicarse. Declaramos el tope porque un matching sin límite anunciado es una obligación abierta, y una obligación abierta no es una promesa seria.">The cap is the ceiling on Forest's own contribution, not on the campaign. Donations that arrive after it is reached still go to the families in full — they just stop being doubled. We state the cap because a match with no declared limit is an open-ended obligation, and an open-ended obligation is not a serious promise.</p>
+</section>
+
+<!-- 2b. PROGRESS ========================================================= -->
+<!-- Hidden by default and revealed only once CONFIG carries a real total, so
+     the page can never show an empty or invented bar. Without JavaScript the
+     section is removed outright (see the noscript rule in the head) rather
+     than left displaying a stale number. -->
+<section class="wrap band progress-band" id="progress" aria-labelledby="progress-h" hidden>
+  <div class="rule">
+    <span data-es="Avance">Progress</span>
+    <span class="rule-line"></span>
+    <span class="rule-note" id="progress-asof"></span>
+  </div>
+
+  <h2 id="progress-h"></h2>
+
+  <!-- Two tracks on one scale. While the match is running they advance in
+       lockstep, which is the 1:1 promise drawn as a measurement. Once the cap
+       is reached the roaster track keeps going and Forest's stops, so the cap
+       explains itself without a footnote. -->
+  <div class="progress" aria-hidden="true">
+    <div class="track-row">
+      <span class="track-key" data-es="Tostadores">Roasters</span>
+      <div class="track"><div class="track-fill fill-you" id="fill-you"></div><div class="track-cap" id="track-cap" hidden></div></div>
+    </div>
+    <div class="track-row">
+      <span class="track-key">Forest</span>
+      <div class="track"><div class="track-fill fill-forest" id="fill-forest"></div></div>
+    </div>
+    <div class="track-axis"><span>0</span><span id="axis-max"></span></div>
+  </div>
+
+  <p class="progress-sum" id="progress-sum"></p>
+  <p class="meta" id="progress-note"></p>
 </section>
 
 <!-- 3. AMOUNTS =========================================================== -->
@@ -1008,7 +1105,17 @@ const CONFIG = {
   },
   matchCapUsd:   10000,         // ceiling on Forest's own contribution
   campaignEnds:  "YYYY-MM-DD",  // TODO: set the matching close date, e.g. "2026-09-30"
-  contactEmail:  "elias@forestcol.com"
+  contactEmail:  "elias@forestcol.com",
+
+  // --- Progress -----------------------------------------------------------
+  // What donors have given, BEFORE Forest's match. Forest's half is derived,
+  // never typed in — so the two can never contradict each other.
+  // Update these two together and redeploy. raisedAsOf is not decoration: an
+  // unstamped total is read as live, and this one is not.
+  // Leave raisedUsd as null (or 0) and the whole progress section is removed
+  // from the page rather than shown empty.
+  raisedUsd:     null,          // e.g. 3240
+  raisedAsOf:    "YYYY-MM-DD"   // e.g. "2026-08-22"
 };
 
 (function () {
@@ -1084,6 +1191,76 @@ const CONFIG = {
     paint("ends", formatDate(CONFIG.campaignEnds, lang === "es" ? "es-CO" : "en-US"));
   }
 
+  /* --- Progress --------------------------------------------------------- */
+
+  var PROGRESS = {
+    en: {
+      updated: function (d) { return "Updated " + d; },
+      heading: function (t) { return t + " raised so far."; },
+      sum: function (r, m) { return r + " given by roasters, matched with " + m + " from Forest."; },
+      left: function (x) { return x + " of Forest's match is still available."; },
+      done: function (c) {
+        return "Forest's " + c + " match is fully committed. Donations still reach the "
+             + "families in full — they just stop being doubled.";
+      }
+    },
+    es: {
+      updated: function (d) { return "Actualizado el " + d; },
+      heading: function (t) { return t + " recaudados hasta ahora."; },
+      sum: function (r, m) { return r + " donados por tostadores, igualados con " + m + " de Forest."; },
+      left: function (x) { return "Quedan " + x + " del matching de Forest."; },
+      done: function (c) {
+        return "El matching de Forest de " + c + " está comprometido por completo. Las donaciones "
+             + "siguen llegando íntegras a las familias; simplemente dejan de duplicarse.";
+      }
+    }
+  };
+
+  // Forest's half is always derived from the donor total, never stored, so the
+  // two halves cannot drift apart. The section stays hidden unless BOTH a
+  // positive total and a date are present — an undated total reads as live.
+  function renderProgress() {
+    var section = document.getElementById("progress");
+    var raised = CONFIG.raisedUsd;
+    var stamp = formatDate(CONFIG.raisedAsOf, lang === "es" ? "es-CO" : "en-US");
+
+    if (typeof raised !== "number" || !isFinite(raised) || raised <= 0) {
+      section.hidden = true;
+      return;
+    }
+    if (!stamp) {
+      section.hidden = true;
+      if (window.console) {
+        console.warn("Progress hidden: CONFIG.raisedUsd is set but CONFIG.raisedAsOf is not a valid YYYY-MM-DD date.");
+      }
+      return;
+    }
+
+    var cap = CONFIG.matchCapUsd;
+    var hasCap = typeof cap === "number" && isFinite(cap) && cap > 0;
+    var matched = hasCap ? Math.min(raised, cap) : raised;
+    var axisMax = Math.max(raised, hasCap ? cap : 0);
+    var copy = PROGRESS[lang];
+
+    document.getElementById("fill-you").style.width = (raised / axisMax * 100) + "%";
+    document.getElementById("fill-forest").style.width = (matched / axisMax * 100) + "%";
+
+    var tick = document.getElementById("track-cap");
+    var overCap = hasCap && raised > cap;
+    tick.hidden = !overCap;
+    if (overCap) tick.style.left = (cap / axisMax * 100) + "%";
+
+    document.getElementById("axis-max").textContent = formatCap(axisMax);
+    document.getElementById("progress-asof").textContent = copy.updated(stamp);
+    document.getElementById("progress-h").textContent = copy.heading(formatCap(raised + matched));
+    document.getElementById("progress-sum").textContent = copy.sum(formatCap(raised), formatCap(matched));
+    document.getElementById("progress-note").textContent = (hasCap && matched >= cap)
+      ? copy.done(formatCap(cap))
+      : copy.left(formatCap((hasCap ? cap : 0) - matched));
+
+    section.hidden = false;
+  }
+
   var contact = document.getElementById("contact-link");
   contact.setAttribute("href", "mailto:" + CONFIG.contactEmail);
   contact.textContent = CONFIG.contactEmail;
@@ -1120,6 +1297,7 @@ const CONFIG = {
     });
 
     renderConfigValues();
+    renderProgress();
   }
 
   langButtons.forEach(function (btn) {
