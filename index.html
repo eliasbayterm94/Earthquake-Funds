@@ -1,3 +1,5 @@
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Together for Colombia — Forest Coffee Earthquake Relief</title>
@@ -198,7 +200,9 @@ a  { color: inherit; }
   font-size: var(--t-micro);
   font-weight: 500;
   letter-spacing: 0.12em;
-  padding: 0.45rem 0.8rem;
+  padding: 0.5rem 1rem;
+  min-height: 44px;              /* thumb-sized, not just readable */
+  min-width: 44px;
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--line);
@@ -475,7 +479,12 @@ noscript .note { display: block; margin-top: 1.25rem; }
   text-transform: uppercase;
   color: var(--muted);
 }
-.note a { text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.note a {
+  display: inline-block;
+  padding-block: 0.7rem;         /* lifts the tap target to 44px */
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
 
 /* --- Footer ------------------------------------------------------------- */
 
