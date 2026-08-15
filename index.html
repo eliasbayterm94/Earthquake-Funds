@@ -44,6 +44,9 @@
   /* Opaque twin of --line. Grid hairlines are drawn per tile and overlap in
      the gap, so a translucent colour would double up and read darker there. */
   --line-solid: #495974;
+  /* Hard offset behind the call-to-action blocks. Not a drop shadow: it has no
+     blur and no gradient, which is how depth is done in print. */
+  --press:  #0B0E1D;
   --focus:  var(--yellow);
 
   --display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
@@ -76,9 +79,10 @@ body {
   font-weight: 400;
   overflow-x: hidden;
   /* Column ticks: the page grid, drawn faintly, always present. */
+  /* Faint enough to read as structure rather than as squared paper. */
   background-image: repeating-linear-gradient(
     to right,
-    rgba(149, 181, 206, 0.10) 0 1px,
+    rgba(149, 181, 206, 0.045) 0 1px,
     transparent 1px calc(100% / 12)
   );
   background-size: min(var(--max), 100vw - 2 * var(--gutter)) 100%;
@@ -299,18 +303,21 @@ a  { color: inherit; }
    would show through those empty cells as solid blocks. */
 /* Four figures, so the column count steps 1 -> 2 -> 4 and skips 3, which
    would leave two dead cells in the last row. */
+/* Set on a rule rather than boxed in: these numbers should read as editorial,
+   not as a table. Their row still fills exactly, so no rule hangs unused. */
 .figures {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1px;
+  /* Kept tight on purpose: at the four-column step the widest figure has only
+     a few px of room, and these numbers belong to one group anyway. */
+  gap: 0 clamp(1rem, 2.5vw, 2.5rem);
   margin-top: clamp(2.5rem, 6vw, 3.5rem);
 }
 @media (min-width: 22rem) { .figures { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 44rem) { .figures { grid-template-columns: repeat(4, 1fr); } }
 .figure {
-  background: var(--ground);
-  box-shadow: 0 0 0 1px var(--line-solid);
-  padding: 1.15rem 1.15rem 1.25rem;
+  border-top: 1px solid var(--line);
+  padding: 1rem 0 1.5rem;
 }
 .figure-n {
   font-family: var(--mono);
@@ -529,10 +536,13 @@ a  { color: inherit; }
   color: var(--navy);
   border: 1px solid var(--yellow);
   margin-top: auto;
-  transition: transform 120ms ease, background-color 120ms ease;
+  box-shadow: 4px 4px 0 var(--press);
+  transition: transform 110ms ease, box-shadow 110ms ease;
 }
-.give:hover { background: var(--off); border-color: var(--off); transform: translateY(-2px); }
-.give:active { transform: translateY(0); }
+/* Lifts off the sheet under the cursor, and is pressed flat onto it when
+   clicked — the offset closes exactly as far as the block travels. */
+.give:hover  { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--press); }
+.give:active { transform: translate(4px, 4px);   box-shadow: 0 0 0 var(--press); }
 
 .give.is-disabled {
   background: transparent;
@@ -540,6 +550,7 @@ a  { color: inherit; }
   border: 1px dashed var(--line);
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 .give-note { font-family: var(--mono); font-size: var(--t-micro); color: var(--muted); }
 
@@ -577,9 +588,11 @@ a  { color: inherit; }
   background: var(--yellow);
   color: var(--navy);
   border: 1px solid var(--yellow);
-  transition: transform 120ms ease, background-color 120ms ease;
+  box-shadow: 5px 5px 0 var(--press);
+  transition: transform 110ms ease, box-shadow 110ms ease;
 }
-.cta:hover { background: var(--off); border-color: var(--off); transform: translateY(-2px); }
+.cta:hover  { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--press); }
+.cta:active { transform: translate(5px, 5px);   box-shadow: 0 0 0 var(--press); }
 
 noscript .note { display: block; margin-top: 1.25rem; }
 
@@ -587,18 +600,21 @@ noscript .note { display: block; margin-top: 1.25rem; }
 
 .split-lead { font-size: var(--t-lead); line-height: 1.5; margin-top: 1.25rem; max-width: 54ch; }
 
+/* No outer frame — the party wall alone is enough to say "two equal halves",
+   and it removes the heaviest box left on the page. */
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid var(--line);
   margin-block: clamp(1.75rem, 4vw, 2.5rem);
 }
 .half {
-  padding: clamp(1.25rem, 3vw, 2rem);
+  padding: 0 clamp(1.25rem, 3vw, 2.5rem);
   display: grid;
   gap: 0.9rem;
   align-content: start;
 }
+.half:first-child { padding-left: 0; }
+.half:last-child  { padding-right: 0; }
 .half + .half { border-left: 2px solid var(--match); }   /* the party wall */
 .half-pct {
   font-family: var(--display);
@@ -611,25 +627,29 @@ noscript .note { display: block; margin-top: 1.25rem; }
 .half h3 { font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem); color: var(--match); }
 
 /* Sub-programmes inside each half — the poster's bolded run-in headings. */
-.items { display: grid; gap: 1.1rem; margin: 0; }
+/* Block rather than grid: a single gap cannot both bind a heading to its own
+   paragraph and separate one pair from the next. */
+.items { margin: 0; }
 .items dt {
   font-weight: 700;
   font-size: 0.9375rem;
   letter-spacing: -0.005em;
+  margin-top: 1.35rem;
 }
-.items dd { margin: 0.15rem 0 0; max-width: 46ch; }
+.items dt:first-child { margin-top: 0; }
+.items dd { margin: 0.3rem 0 0; max-width: 46ch; }
 
 /* --- Transparency ------------------------------------------------------- */
 
+/* This is the fine print. It needed a rule between items, not three frames. */
 .notes {
   display: grid;
-  gap: 1px;
+  gap: 0;
   margin-top: clamp(1.5rem, 4vw, 2rem);
 }
 .note {
-  background: var(--ground);
-  box-shadow: 0 0 0 1px var(--line-solid);
-  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-top: 1px solid var(--line);
+  padding: clamp(1.25rem, 3vw, 1.5rem) 0 clamp(1.5rem, 4vw, 1.75rem);
   display: grid;
   gap: 0.65rem;
 }
@@ -667,7 +687,8 @@ noscript .note { display: block; margin-top: 1.25rem; }
 
 @media (max-width: 40rem) {
   .split { grid-template-columns: 1fr; }
-  .half + .half { border-left: 0; border-top: 2px solid var(--match); }
+  .half { padding-inline: 0; }
+  .half + .half { border-left: 0; border-top: 2px solid var(--match); padding-top: 1.75rem; }
   .rule { flex-wrap: wrap; }
   .rule-note { width: 100%; text-align: left; }
   .rule-line { min-width: 2rem; }
@@ -690,7 +711,8 @@ noscript .note { display: block; margin-top: 1.25rem; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .give:hover, .cta:hover { transform: none; }
+  /* The block stays put; the offset alone carries the state change. */
+  .give:hover, .cta:hover, .give:active, .cta:active { transform: none; }
 }
 
 @media print {
