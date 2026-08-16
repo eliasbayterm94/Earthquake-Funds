@@ -448,9 +448,29 @@ a  { color: inherit; }
   height: 2.1rem;
   border: 1px solid var(--line);
 }
-.track-fill { height: 100%; width: 0; }
+.track-fill { height: 100%; width: 0; position: relative; overflow: hidden; }
 .fill-you    { background: var(--fg); }
 .fill-forest { background: var(--match); }
+
+/* Section hatching that drifts while the campaign is open. It says the thing
+   is under way — which is true — without implying that a figure is changing
+   as you watch. Hard-stop stripes, so it stays flat: no soft gradient.
+   The stripes are vertical and skewed rather than drawn on an angle, because
+   a vertical pattern tiles seamlessly and can be shifted by exactly one
+   period; a diagonal one leaves a seam every tile. */
+.track-fill::after {
+  content: "";
+  position: absolute;
+  top: -25%; bottom: -25%; left: -2rem; right: -2rem;
+  background-image: repeating-linear-gradient(90deg,
+    rgba(27, 32, 61, 0.22) 0 5px, transparent 5px 14px);
+  transform: skewX(-18deg);
+  animation: hatch-drift 2.6s linear infinite;
+}
+@keyframes hatch-drift { to { background-position: 14px 0; } }
+
+/* Once the matching has closed, the motion stops with it. */
+.progress.is-closed .track-fill::after { animation: none; }
 
 /* Where the campaign stood at the previous report. The gap between this mark
    and the end of the fill is the week's movement, drawn rather than claimed. */
@@ -1276,7 +1296,9 @@ const CONFIG = {
   var PROGRESS = {
     en: {
       updated: function (d) { return "Updated " + d; },
-      daysLeft: function (n) { return n + (n === 1 ? " day" : " days") + " of matching left"; },
+      daysLeft: function (n) {
+        return n === 0 ? "matching closed" : n + (n === 1 ? " day" : " days") + " of matching left";
+      },
       heading: function (t) { return t + " raised so far."; },
       sum: function (r, m) { return r + " given by roasters, matched with " + m + " from Forest."; },
       since: function (x) { return "+" + x + " since the last update"; },
@@ -1288,7 +1310,10 @@ const CONFIG = {
     },
     es: {
       updated: function (d) { return "Actualizado el " + d; },
-      daysLeft: function (n) { return n === 1 ? "queda 1 día de matching" : "quedan " + n + " días de matching"; },
+      daysLeft: function (n) {
+        if (n === 0) return "matching cerrado";
+        return n === 1 ? "queda 1 día de matching" : "quedan " + n + " días de matching";
+      },
       heading: function (t) { return t + " recaudados hasta ahora."; },
       sum: function (r, m) { return r + " donados por tostadores, igualados con " + m + " de Forest."; },
       since: function (x) { return "+" + x + " desde el último reporte"; },
@@ -1357,6 +1382,10 @@ const CONFIG = {
     var left = daysLeft(live.ends);
     document.getElementById("progress-asof").textContent =
       copy.updated(stamp) + (left === null ? "" : "  ·  " + copy.daysLeft(left));
+
+    // The drifting hatch is a claim that the campaign is open. When it is not,
+    // the claim has to stop too.
+    document.querySelector(".progress").classList.toggle("is-closed", left === 0);
 
     section.hidden = false;
     paintProgress(revealed ? 1 : 0);
