@@ -452,6 +452,26 @@ a  { color: inherit; }
 .fill-you    { background: var(--fg); }
 .fill-forest { background: var(--match); }
 
+/* Where the campaign stood at the previous report. The gap between this mark
+   and the end of the fill is the week's movement, drawn rather than claimed. */
+.track-prev {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ground);
+  opacity: 0.75;
+}
+
+.progress-delta {
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--match);
+  margin-top: 0.6rem;
+}
+
 /* Marks where Forest's cap sits once donations have run past it. */
 .track-cap {
   position: absolute;
@@ -847,7 +867,7 @@ noscript .note { display: block; margin-top: 1.25rem; }
   <div class="progress" aria-hidden="true">
     <div class="track-row">
       <span class="track-key" data-es="Tostadores">Roasters</span>
-      <div class="track"><div class="track-fill fill-you" id="fill-you"></div><div class="track-cap" id="track-cap" hidden></div></div>
+      <div class="track"><div class="track-fill fill-you" id="fill-you"></div><div class="track-prev" id="track-prev" hidden></div><div class="track-cap" id="track-cap" hidden></div></div>
     </div>
     <div class="track-row">
       <span class="track-key">Forest</span>
@@ -857,6 +877,7 @@ noscript .note { display: block; margin-top: 1.25rem; }
   </div>
 
   <p class="progress-sum" id="progress-sum"></p>
+  <p class="progress-delta" id="progress-delta" hidden></p>
   <p class="meta" id="progress-note"></p>
 </section>
 
@@ -1146,6 +1167,9 @@ const CONFIG = {
   // any row order. Recognised keys:
   //     raised_usd      3240            <- donations only, not the match
   //     as_of           2026-08-22      <- plain text, YYYY-MM-DD
+  //     previous_usd    2400            <- optional: last week's total. Draws
+  //                                        a mark where the campaign stood and
+  //                                        shows how far it moved since.
   //     match_cap_usd   10000           <- optional, overrides matchCapUsd
   //     campaign_ends   2026-09-30      <- optional, overrides campaignEnds
   //
@@ -1201,9 +1225,16 @@ const CONFIG = {
 
   /* --- Cap and closing date -------------------------------------------- */
 
+  // Returns null for an unset value, which is what the spec rows key off.
   function formatCap(value) {
     if (typeof value !== "number" || !isFinite(value) || value <= 0) return null;
     return "USD " + value.toLocaleString("en-US");
+  }
+
+  // Same shape, but zero is a real amount here: the count-up starts there, and
+  // formatCap would hand back null for the opening frames.
+  function money(value) {
+    return "USD " + Math.round(value).toLocaleString("en-US");
   }
 
   function formatDate(value, locale) {
@@ -1231,7 +1262,8 @@ const CONFIG = {
     cap:    CONFIG.matchCapUsd,
     ends:   CONFIG.campaignEnds,
     raised: CONFIG.raisedUsd,
-    asOf:   CONFIG.raisedAsOf
+    asOf:   CONFIG.raisedAsOf,
+    previous: null
   };
 
   function renderConfigValues() {
@@ -1244,8 +1276,10 @@ const CONFIG = {
   var PROGRESS = {
     en: {
       updated: function (d) { return "Updated " + d; },
+      daysLeft: function (n) { return n + (n === 1 ? " day" : " days") + " of matching left"; },
       heading: function (t) { return t + " raised so far."; },
       sum: function (r, m) { return r + " given by roasters, matched with " + m + " from Forest."; },
+      since: function (x) { return "+" + x + " since the last update"; },
       left: function (x) { return x + " of Forest's match is still available."; },
       done: function (c) {
         return "Forest's " + c + " match is fully committed. Donations still reach the "
@@ -1254,8 +1288,10 @@ const CONFIG = {
     },
     es: {
       updated: function (d) { return "Actualizado el " + d; },
+      daysLeft: function (n) { return n === 1 ? "queda 1 día de matching" : "quedan " + n + " días de matching"; },
       heading: function (t) { return t + " recaudados hasta ahora."; },
       sum: function (r, m) { return r + " donados por tostadores, igualados con " + m + " de Forest."; },
+      since: function (x) { return "+" + x + " desde el último reporte"; },
       left: function (x) { return "Quedan " + x + " del matching de Forest."; },
       done: function (c) {
         return "El matching de Forest de " + c + " está comprometido por completo. Las donaciones "
@@ -1290,23 +1326,92 @@ const CONFIG = {
     var axisMax = Math.max(raised, hasCap ? cap : 0);
     var copy = PROGRESS[lang];
 
-    document.getElementById("fill-you").style.width = (raised / axisMax * 100) + "%";
-    document.getElementById("fill-forest").style.width = (matched / axisMax * 100) + "%";
+    target = { raised: raised, matched: matched, axisMax: axisMax };
 
     var tick = document.getElementById("track-cap");
     var overCap = hasCap && raised > cap;
     tick.hidden = !overCap;
     if (overCap) tick.style.left = (cap / axisMax * 100) + "%";
 
+    // Where the campaign stood at the last report. Only drawn when it is a
+    // real earlier figure, never as a decorative notch.
+    var prevMark = document.getElementById("track-prev");
+    var deltaEl = document.getElementById("progress-delta");
+    var prev = live.previous;
+    var hasPrev = typeof prev === "number" && isFinite(prev) && prev >= 0 && prev < raised;
+    prevMark.hidden = !hasPrev;
+    deltaEl.hidden = !hasPrev;
+    if (hasPrev) {
+      prevMark.style.left = (prev / axisMax * 100) + "%";
+      deltaEl.textContent = copy.since(formatCap(raised - prev));
+    }
+
     document.getElementById("axis-max").textContent = formatCap(axisMax);
-    document.getElementById("progress-asof").textContent = copy.updated(stamp);
-    document.getElementById("progress-h").textContent = copy.heading(formatCap(raised + matched));
     document.getElementById("progress-sum").textContent = copy.sum(formatCap(raised), formatCap(matched));
     document.getElementById("progress-note").textContent = (hasCap && matched >= cap)
       ? copy.done(formatCap(cap))
       : copy.left(formatCap((hasCap ? cap : 0) - matched));
 
+    // The stamp carries the countdown, which moves on its own every day even
+    // when nobody touches the sheet.
+    var left = daysLeft(live.ends);
+    document.getElementById("progress-asof").textContent =
+      copy.updated(stamp) + (left === null ? "" : "  ·  " + copy.daysLeft(left));
+
     section.hidden = false;
+    paintProgress(revealed ? 1 : 0);
+    maybeReveal();
+  }
+
+  /* --- Progress reveal -------------------------------------------------- */
+
+  // The bars grow and the total counts up once, when the section first comes
+  // into view. It animates a figure that is already true — it does not imply
+  // that anything is happening live.
+  var target = null;
+  var revealed = false;
+  var reduceMotion = window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function paintProgress(t) {
+    if (!target) return;
+    var raised = target.raised * t;
+    var matched = target.matched * t;
+    document.getElementById("fill-you").style.width = (raised / target.axisMax * 100) + "%";
+    document.getElementById("fill-forest").style.width = (matched / target.axisMax * 100) + "%";
+    document.getElementById("progress-h").textContent =
+      PROGRESS[lang].heading(money(raised + matched));
+  }
+
+  function maybeReveal() {
+    if (revealed) return;
+    if (reduceMotion || !window.IntersectionObserver || !window.requestAnimationFrame) {
+      revealed = true;
+      paintProgress(1);
+      return;
+    }
+    var section = document.getElementById("progress");
+    var io = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      revealed = true;
+      var start = null, DUR = 1100;
+      var step = function (ts) {
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / DUR);
+        paintProgress(1 - Math.pow(1 - t, 3));   // ease-out cubic
+        if (t < 1) window.requestAnimationFrame(step); else paintProgress(1);
+      };
+      window.requestAnimationFrame(step);
+    }, { threshold: 0.35 });
+    io.observe(section);
+  }
+
+  function daysLeft(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return null;
+    var end = new Date(iso + "T23:59:59");
+    if (isNaN(end.getTime())) return null;
+    return Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000));
   }
 
   /* --- Published sheet -------------------------------------------------- */
@@ -1371,11 +1476,13 @@ const CONFIG = {
     var asOf   = toIsoDate(map.as_of);
     var cap    = toNumber(map.match_cap_usd);
     var ends   = toIsoDate(map.campaign_ends);
+    var prev   = toNumber(map.previous_usd);
 
-    if (raised !== null) live.raised = raised;
-    if (asOf)            live.asOf   = asOf;
-    if (cap !== null)    live.cap    = cap;
-    if (ends)            live.ends   = ends;
+    if (raised !== null) live.raised   = raised;
+    if (asOf)            live.asOf     = asOf;
+    if (cap !== null)    live.cap      = cap;
+    if (ends)            live.ends     = ends;
+    if (prev !== null)   live.previous = prev;
 
     if (raised !== null && !asOf && !toIsoDate(live.asOf) && window.console) {
       console.warn('Sheet has raised_usd but no readable as_of date. Put it in as plain text, YYYY-MM-DD.');
@@ -1462,5 +1569,13 @@ const CONFIG = {
 
   // Fired last, and never awaited: the page is fully usable before it resolves.
   loadSheet();
+
+  // A tab left open picks up a sheet edit without a reload. Only while the tab
+  // is actually visible — no polling in the background.
+  if (window.setInterval && CONFIG.sheetCsvUrl) {
+    window.setInterval(function () {
+      if (document.visibilityState === "visible") loadSheet();
+    }, 300000);
+  }
 })();
 </script>
